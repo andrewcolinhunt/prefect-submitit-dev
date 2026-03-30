@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Read(//scratch/tmp/pytest-of-ach94/pytest-29/test_lifecycle0/logs/**)"
+    ]
+  }
+}
