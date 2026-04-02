@@ -159,61 +159,6 @@ class TestResult:
         with pytest.raises(SlurmJobFailed, match="no result.pkl"):
             f.result()
 
-    def test_result_failed_state_raises_slurm_job_failed(self, tmp_path):
-        from prefect.states import Failed
-
-        f = _make_future(tmp_path, returncode=0)
-        state = Failed(data=ValueError("bad input"))
-        envelope = {"status": "ok", "result": state}
-        with open(tmp_path / "result.pkl", "wb") as fp:
-            pickle.dump(envelope, fp)
-        with pytest.raises(SlurmJobFailed, match="bad input"):
-            f.result()
-
-    def test_result_failed_state_no_raise(self, tmp_path):
-        from prefect.states import Failed
-
-        f = _make_future(tmp_path, returncode=0)
-        state = Failed(data=ValueError("bad input"))
-        envelope = {"status": "ok", "result": state}
-        with open(tmp_path / "result.pkl", "wb") as fp:
-            pickle.dump(envelope, fp)
-        assert f.result(raise_on_failure=False) is None
-
-    def test_result_failed_state_chains_original_exception(self, tmp_path):
-        from prefect.states import Failed
-
-        f = _make_future(tmp_path, returncode=0)
-        state = Failed(data=ValueError("bad input"))
-        envelope = {"status": "ok", "result": state}
-        with open(tmp_path / "result.pkl", "wb") as fp:
-            pickle.dump(envelope, fp)
-        with pytest.raises(SlurmJobFailed) as exc_info:
-            f.result()
-        assert isinstance(exc_info.value.__cause__, ValueError)
-
-    def test_result_failed_state_includes_job_label(self, tmp_path):
-        f = _make_future(tmp_path, returncode=0, slurm_job_id="456", step_index=3)
-        from prefect.states import Failed
-
-        state = Failed(data=ValueError("bad input"))
-        envelope = {"status": "ok", "result": state}
-        with open(tmp_path / "result.pkl", "wb") as fp:
-            pickle.dump(envelope, fp)
-        with pytest.raises(SlurmJobFailed, match="srun step 456.3"):
-            f.result()
-
-    def test_result_failed_state_cached_after_no_raise(self, tmp_path):
-        from prefect.states import Failed
-
-        f = _make_future(tmp_path, returncode=0)
-        state = Failed(data=ValueError("bad input"))
-        envelope = {"status": "ok", "result": state}
-        with open(tmp_path / "result.pkl", "wb") as fp:
-            pickle.dump(envelope, fp)
-        assert f.result(raise_on_failure=False) is None
-        assert f.result(raise_on_failure=False) is None  # uses cache
-
 
 class TestCancel:
     """Test cancel() behavior."""

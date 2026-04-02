@@ -4,13 +4,15 @@ Run inside the container:
     salloc -n4 --mem=4G python /workspace/_dev/scripts/test_srun_protocol.py
 """
 
-import cloudpickle
+from __future__ import annotations
+
 import os
 import pickle
 import subprocess
 import sys
-import tempfile
 import time
+
+import cloudpickle
 
 PYTHON = sys.executable
 BASE_DIR = f"/tmp/srun_test_{os.environ.get('SLURM_JOB_ID', 'nojob')}"
@@ -69,12 +71,17 @@ def serialize_task(folder: str, fn, args, kwargs=None):
 def launch_srun(folder: str) -> subprocess.Popen:
     """Launch an srun step that runs the worker script."""
     cmd = [
-        "srun", "--exact", "--mpi=none", "-n1",
-        PYTHON, "-u", "-c", WORKER_SCRIPT, folder,
+        "srun",
+        "--exact",
+        "--mpi=none",
+        "-n1",
+        PYTHON,
+        "-u",
+        "-c",
+        WORKER_SCRIPT,
+        folder,
     ]
-    return subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
+    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def collect_result(folder: str) -> dict:
@@ -97,8 +104,10 @@ def test_single_task():
     assert envelope["status"] == "ok"
     assert envelope["result"]["output"] == 1764  # 42^2
     assert envelope["result"]["step_id"] != "unset"
-    print(f"  PASS: result={envelope['result']['output']}, "
-          f"step_id={envelope['result']['step_id']}")
+    print(
+        f"  PASS: result={envelope['result']['output']}, "
+        f"step_id={envelope['result']['step_id']}"
+    )
 
 
 def test_error_envelope():
@@ -164,13 +173,19 @@ def test_concurrent_tasks():
         assert envelope["status"] == "ok"
         assert envelope["result"]["output"] == i**2
         step_ids.add(envelope["result"]["step_id"])
-        print(f"  task {i}: output={envelope['result']['output']}, "
-              f"step_id={envelope['result']['step_id']}, "
-              f"pid={envelope['result']['pid']}")
+        print(
+            f"  task {i}: output={envelope['result']['output']}, "
+            f"step_id={envelope['result']['step_id']}, "
+            f"pid={envelope['result']['pid']}"
+        )
 
-    assert len(step_ids) == n_tasks, f"Expected {n_tasks} unique step IDs, got {step_ids}"
-    print(f"  PASS: {n_tasks} tasks, {len(step_ids)} unique step IDs, "
-          f"elapsed={elapsed:.2f}s (should be ~1s, not ~4s)")
+    assert len(step_ids) == n_tasks, (
+        f"Expected {n_tasks} unique step IDs, got {step_ids}"
+    )
+    print(
+        f"  PASS: {n_tasks} tasks, {len(step_ids)} unique step IDs, "
+        f"elapsed={elapsed:.2f}s (should be ~1s, not ~4s)"
+    )
 
 
 def test_sacct_visibility():
@@ -184,10 +199,16 @@ def test_sacct_visibility():
     # Give sacct a moment to catch up
     time.sleep(1)
     result = subprocess.run(
-        ["sacct", "-j", job_id,
-         "--format=JobID,JobName,State,ExitCode,AllocCPUS",
-         "--noheader", "--parsable2"],
-        capture_output=True, text=True,
+        [
+            "sacct",
+            "-j",
+            job_id,
+            "--format=JobID,JobName,State,ExitCode,AllocCPUS",
+            "--noheader",
+            "--parsable2",
+        ],
+        capture_output=True,
+        text=True,
     )
     lines = [l for l in result.stdout.strip().split("\n") if l]
     step_lines = [l for l in lines if "." in l.split("|")[0]]
@@ -207,6 +228,7 @@ def test_resource_flags():
     # Task that reports its resource environment
     def resource_check():
         import os
+
         return {
             "SLURM_CPUS_PER_TASK": os.environ.get("SLURM_CPUS_PER_TASK", "unset"),
             "SLURM_MEM_PER_NODE": os.environ.get("SLURM_MEM_PER_NODE", "unset"),
@@ -216,9 +238,17 @@ def test_resource_flags():
     serialize_task(folder, resource_check, ())
 
     cmd = [
-        "srun", "--exact", "--mpi=none", "-n1",
-        "--cpus-per-task=2", "--mem=512M",
-        PYTHON, "-u", "-c", WORKER_SCRIPT, folder,
+        "srun",
+        "--exact",
+        "--mpi=none",
+        "-n1",
+        "--cpus-per-task=2",
+        "--mem=512M",
+        PYTHON,
+        "-u",
+        "-c",
+        WORKER_SCRIPT,
+        folder,
     ]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate(timeout=30)
@@ -252,5 +282,6 @@ if __name__ == "__main__":
     finally:
         # Cleanup
         import shutil
+
         if os.path.exists(BASE_DIR):
             shutil.rmtree(BASE_DIR)
