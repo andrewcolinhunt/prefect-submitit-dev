@@ -77,13 +77,13 @@ SlurmIntraBackend                SlurmTaskRunner
   Prefect @flow                        │
     execute_unit_task.map() ──────────►│
                                        ├─ pickle callable to NFS
-                                       ├─ srun --exclusive ... python -m submitit.core._submit
+                                       ├─ srun --exact --mpi=none -n1 ... python -m prefect_submitit.srun_worker
                                        │      │
                                        │      ├──► Node 0, GPU 0: unpickle → execute → pickle result
                                        │      ├──► Node 1, GPU 2: unpickle → execute → pickle result
                                        │      └──► Node 3, GPU 7: unpickle → execute → pickle result
                                        │
-                                       ├─ poll for result pickles on NFS
+                                       ├─ poll for process exit, read result envelope from NFS
                                        ├─ return SrunPrefectFuture per task
                                        │
   _collect_results()  ◄────────────────┘
@@ -180,9 +180,10 @@ pipeline.run(
 
 ---
 
-## Open Questions
+## Resolved Questions
 
-**Worker ID propagation.** With `worker_id_env_var=None`, all srun workers
-report `worker_id=0` in provenance. `srun` sets `SLURM_PROCID` (global rank)
-and `SLURM_LOCALID` (node-local rank) in each task's environment. We could
-use `SLURM_PROCID` as the worker ID env var for provenance tracking.
+**Worker ID propagation.** `srun` sets `SLURM_STEP_ID` (auto-incrementing
+per step) and `SLURM_PROCID` (global rank) in each task's environment.
+`prefect-submitit` uses `SLURM_STEP_ID` for Prefect task-run naming
+(enabling `sacct -j <jobid>.<stepid>` correlation). For artisan provenance,
+`SLURM_PROCID` can be used as `worker_id_env_var`.
