@@ -98,8 +98,8 @@ twine = ">=6.2.0,<7"
 test = "pytest tests/ --ignore=tests/integration"
 test-sbatch = { cmd = "pytest --run-slurm tests/integration/ --ignore=tests/integration/test_srun_*.py", env = { SLURM_TEST_PARTITION = "cpu" } }
 test-sbatch-docker = { cmd = "pytest --run-slurm tests/integration/ --ignore=tests/integration/test_srun_*.py", env = { SLURM_TEST_PARTITION = "debug" } }
-test-srun = { cmd = "salloc -n4 --mem=4G -- bash -c 'python -m pytest --run-slurm tests/integration/test_srun_*.py'", env = { SLURM_TEST_PARTITION = "cpu" } }
-test-srun-docker = { cmd = "salloc -n4 --mem=4G -- bash -c 'python -m pytest --run-slurm tests/integration/test_srun_*.py'", env = { SLURM_TEST_PARTITION = "debug" } }
+test-srun = { cmd = "salloc -n4 --mem=4G pytest --run-slurm tests/integration/test_srun_*.py", env = { SLURM_TEST_PARTITION = "cpu" } }
+test-srun-docker = { cmd = "salloc -n4 --mem=4G pytest --run-slurm tests/integration/test_srun_*.py", env = { SLURM_TEST_PARTITION = "debug" } }
 fmt = "ruff format . && ruff check --fix ."
 install-hooks = "pre-commit install"
 pre-commit = "pre-commit run --all-files"
