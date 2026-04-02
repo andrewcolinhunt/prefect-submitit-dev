@@ -15,7 +15,7 @@ import cloudpickle
 from prefect.futures import PrefectFuture
 from prefect.states import Completed, Failed, Pending, Running, State
 
-from prefect_submitit.futures.base import SlurmJobFailed, _unwrap_state
+from prefect_submitit.futures.base import SlurmJobFailed
 
 logger = logging.getLogger(__name__)
 
@@ -149,10 +149,15 @@ class SrunPrefectFuture(PrefectFuture[Any]):
         raw_result = envelope["result"]
         # Unwrap cloudpickle-serialized Prefect state if present
         if isinstance(raw_result, bytes):
-            raw_result = cloudpickle.loads(raw_result)
-        self._result_cache = _unwrap_state(
-            raw_result, raise_on_failure, f"srun step {self.slurm_job_id}"
-        )
+            state = cloudpickle.loads(raw_result)
+            if hasattr(state, "result"):
+                self._result_cache = state.result()
+            else:
+                self._result_cache = state
+        elif hasattr(raw_result, "result"):
+            self._result_cache = raw_result.result()
+        else:
+            self._result_cache = raw_result
 
         self._result_retrieved = True
         return self._result_cache
