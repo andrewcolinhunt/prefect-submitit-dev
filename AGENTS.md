@@ -6,11 +6,11 @@ Project conventions for contributors (human and AI).
 
 ## Environment
 
-| Setting     | Value                       |
-| ----------- | --------------------------- |
-| Environment | Pixi (`~/.pixi/bin/pixi`)   |
-| Formatting  | Ruff                        |
-| Testing     | Pytest                      |
+| Setting     | Value                     |
+| ----------- | ------------------------- |
+| Environment | Pixi (`~/.pixi/bin/pixi`) |
+| Formatting  | Ruff                      |
+| Testing     | Pytest                    |
 
 IMPORTANT: Always use the full pixi path (`~/.pixi/bin/pixi`) when running
 commands. The short `pixi` form is for user-facing docs only.
@@ -20,22 +20,33 @@ commands. The short `pixi` form is for user-facing docs only.
 ## Commands
 
 ```bash
-pixi install                              # Install dependencies
-pixi run -e dev test                      # Run unit tests
-pixi run -e dev test-sbatch               # Run sbatch integration tests (cluster)
-pixi run -e dev test-sbatch-docker        # Run sbatch integration tests (Docker)
-pixi run -e dev test-srun                 # Run srun integration tests (cluster, via salloc)
-pixi run -e dev test-srun-docker          # Run srun integration tests (Docker, via salloc)
-pixi run -e dev fmt                       # Format and lint
-pixi run prefect-start                    # Start Prefect server (background)
-pixi run prefect-stop                     # Stop Prefect server
-pixi run install-kernel                   # Register Jupyter kernel
-pixi run slurm-build                      # Build Docker SLURM image
-pixi run slurm-up                         # Start SLURM container
-pixi run slurm-down                       # Stop and remove SLURM container
-pixi run slurm-shell                      # Shell into running container
-pixi run python script.py                 # Run scripts
+~/.pixi/bin/pixi install --locked
+~/.pixi/bin/pixi run --locked -e dev test
+~/.pixi/bin/pixi run --locked -e dev test-sbatch
+~/.pixi/bin/pixi run --locked -e dev test-sbatch-docker
+~/.pixi/bin/pixi run --locked -e dev test-srun
+~/.pixi/bin/pixi run --locked -e dev test-srun-docker
+~/.pixi/bin/pixi run --locked -e dev fmt
+~/.pixi/bin/pixi run --locked prefect-start
+~/.pixi/bin/pixi run --locked prefect-stop
+~/.pixi/bin/pixi run --locked install-kernel
+~/.pixi/bin/pixi run --locked slurm-build
+~/.pixi/bin/pixi run --locked slurm-up
+~/.pixi/bin/pixi run --locked slurm-down
+~/.pixi/bin/pixi run --locked slurm-shell
+~/.pixi/bin/pixi run --locked python script.py
 ```
+
+### Pixi lock discipline
+
+Use `--locked` for routine installs and tasks so Pixi stops instead of silently
+rewriting `pixi.lock`. Run an unlocked Pixi command only when intentionally
+changing dependencies, and commit `pyproject.toml` and `pixi.lock` together.
+
+If `pixi.lock` becomes dirty unexpectedly, inspect the diff. When the only
+changes are the editable project's Git-derived `version` and `sha256`, and no
+dependency change was intended, restore `pixi.lock`. Do not discard it when
+`pyproject.toml` or dependencies were intentionally changed.
 
 ---
 
@@ -128,16 +139,17 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`
 
 ### PR Validation Order
 
-1. `pixi run -e dev fmt`
-2. `pixi run -e dev test`
+1. `~/.pixi/bin/pixi run --locked -e dev fmt`
+2. `~/.pixi/bin/pixi run --locked -e dev test`
 
 ---
 
 ## Pre-PR Checklist
 
 - [ ] Code: no debug prints, no commented-out code
-- [ ] Tests pass (`pixi run -e dev test`), new code has tests
-- [ ] Formatted and linted (`pixi run -e dev fmt`)
+- [ ] Tests pass (`~/.pixi/bin/pixi run --locked -e dev test`), new code has
+      tests
+- [ ] Formatted and linted (`~/.pixi/bin/pixi run --locked -e dev fmt`)
 - [ ] Commits are atomic with proper messages
 - [ ] Self-reviewed all changes
 
